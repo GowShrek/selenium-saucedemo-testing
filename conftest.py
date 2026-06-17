@@ -13,8 +13,6 @@ Gồm 2 phần:
 import os
 import pytest
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 
 SCREENSHOT_DIR = os.path.join(os.path.dirname(__file__), "screenshots")
 
@@ -33,11 +31,16 @@ def driver():
     # có màn hình hiển thị.
     if os.environ.get("HEADLESS", "1") == "1":
         chrome_options.add_argument("--headless=new")
-    chrome_options.add_argument("--start-maximized")
     chrome_options.add_argument("--window-size=1920,1080")
+    # Các cờ dưới đây BẮT BUỘC khi chạy Chrome trong container/CI
+    # (GitHub Actions runner cũng là một dạng container), vì Chrome
+    # mặc định cần sandbox và shared-memory mà các môi trường này
+    # thường giới hạn hoặc không hỗ trợ đầy đủ -> thiếu cờ này gây
+    # crash ngay khi khởi tạo (SessionNotCreatedException).
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--disable-extensions")
 
     # Trên CI (GitHub Actions), action setup-chrome cài Chrome vào một
     # đường dẫn không cố định. Biến CHROME_BIN (nếu có) chỉ rõ đường dẫn
@@ -46,8 +49,11 @@ def driver():
     if chrome_bin:
         chrome_options.binary_location = chrome_bin
 
-    service = Service(ChromeDriverManager().install())
-    drv = webdriver.Chrome(service=service, options=chrome_options)
+    # Từ Selenium 4.6+, không cần webdriver-manager nữa: Selenium Manager
+    # (tích hợp sẵn trong thư viện selenium) sẽ tự động tải đúng phiên bản
+    # ChromeDriver khớp với Chrome đã cài trên máy/server, không phụ thuộc
+    # domain tải driver bên thứ ba -> ổn định hơn khi chạy trên CI.
+    drv = webdriver.Chrome(options=chrome_options)
     drv.implicitly_wait(3)
 
     yield drv
