@@ -1,5 +1,7 @@
 # Kiểm thử tự động website SauceDemo bằng Selenium (Python)
 
+[![Selenium Automated Tests](https://github.com/GowShrek/selenium-saucedemo-testing/actions/workflows/selenium-tests.yml/badge.svg)](https://github.com/GowShrek/selenium-saucedemo-testing/actions/workflows/selenium-tests.yml)
+
 ## 1. Mục tiêu bài tập
 
 Xây dựng tối thiểu 3 test case kiểm thử tự động (automation test) cho một
@@ -12,9 +14,8 @@ website, sử dụng Selenium WebDriver. Website được chọn:
 | Thành phần | Vai trò |
 |---|---|
 | Python 3.11+ | Ngôn ngữ viết test |
-| Selenium WebDriver | Điều khiển trình duyệt Chrome tự động |
+| Selenium WebDriver 4.20+ | Điều khiển trình duyệt Chrome tự động (dùng Selenium Manager tích hợp để tự tải đúng ChromeDriver) |
 | pytest | Framework chạy test, báo cáo PASS/FAIL |
-| webdriver-manager | Tự động tải đúng phiên bản ChromeDriver |
 | GitHub Actions | Tự động chạy test mỗi khi push code (CI/CD) |
 
 ## 3. Kiến trúc project — Page Object Model (POM)
@@ -105,7 +106,16 @@ Mỗi khi có commit mới được push lên branch `main`, GitHub sẽ **tự 
 Đây là cách xác minh đáng tin cậy nhất rằng bộ test thực sự hoạt động đúng,
 vì nó chạy trên môi trường độc lập, không phụ thuộc vào máy cá nhân của ai.
 
-**Xem kết quả chạy thật**: vào tab **Actions** của repository này trên GitHub.
+**Đã xác nhận chạy thật và pass**: cả 4 test case (3 bắt buộc + 1 negative
+test bổ sung) đã chạy thành công trên GitHub Actions với Chrome thật ở chế
+độ headless. Xem badge trạng thái ở đầu file này, hoặc vào tab **Actions**
+của repository để xem lịch sử các lần chạy.
+
+Một lưu ý kỹ thuật quan trọng khi chạy Chrome trong môi trường container/CI:
+cần các cờ `--no-sandbox`, `--disable-dev-shm-usage`, `--disable-gpu` (đã
+được thiết lập sẵn trong `conftest.py`), vì Chrome mặc định yêu cầu sandbox
+và vùng nhớ chia sẻ (shared memory) mà môi trường container thường giới hạn
+— thiếu các cờ này sẽ khiến Chrome crash ngay khi khởi tạo.
 
 ## 7. Giải thích các kỹ thuật Selenium quan trọng được áp dụng
 

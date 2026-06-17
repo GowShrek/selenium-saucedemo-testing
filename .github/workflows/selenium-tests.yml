@@ -33,40 +33,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Show Chrome and Python versions (debug info)
-        run: |
-          "${{ steps.setup-chrome.outputs.chrome-path }}" --version || true
-          python --version
-          pip show selenium webdriver-manager
-
       - name: Run Selenium test suite
         env:
           HEADLESS: "1"
           CHROME_BIN: ${{ steps.setup-chrome.outputs.chrome-path }}
         run: |
-          set +e
-          pytest tests/test_saucedemo.py -v -s --junitxml=results.xml 2>&1 | tee full_output.log
-          EXIT_CODE=$?
-          echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
-          exit $EXIT_CODE
-        id: run_tests
-
-      - name: Write diagnosis to Job Summary (always runs, even on failure)
-        if: always()
-        run: |
-          echo "## Test run diagnosis" >> "$GITHUB_STEP_SUMMARY"
-          echo '```text' >> "$GITHUB_STEP_SUMMARY"
-          grep -B2 -A40 "Error\|Exception\|Traceback\|FAILED" full_output.log | head -150 >> "$GITHUB_STEP_SUMMARY" || echo "No Error/Exception lines found" >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload diagnosis log (always)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: diagnosis-log
-          path: |
-            full_output.log
-          if-no-files-found: ignore
+          pytest tests/test_saucedemo.py -v -s --junitxml=results.xml
 
       - name: Upload screenshots of failed tests (if any)
         if: failure()
