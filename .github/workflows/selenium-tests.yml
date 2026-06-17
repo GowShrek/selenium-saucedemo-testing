@@ -26,15 +26,23 @@ jobs:
 
       - name: Install Google Chrome
         uses: browser-actions/setup-chrome@v1
+        id: setup-chrome
 
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Show Chrome and Python versions (debug info)
+        run: |
+          "${{ steps.setup-chrome.outputs.chrome-path }}" --version || true
+          python --version
+          pip show selenium webdriver-manager
+
       - name: Run Selenium test suite
         env:
           HEADLESS: "1"
+          CHROME_BIN: ${{ steps.setup-chrome.outputs.chrome-path }}
         run: |
           pytest tests/test_saucedemo.py -v -s --junitxml=results.xml
 

@@ -37,6 +37,14 @@ def driver():
     chrome_options.add_argument("--window-size=1920,1080")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-gpu")
+
+    # Trên CI (GitHub Actions), action setup-chrome cài Chrome vào một
+    # đường dẫn không cố định. Biến CHROME_BIN (nếu có) chỉ rõ đường dẫn
+    # đó cho Selenium, tránh trường hợp Selenium tìm sai bản Chrome.
+    chrome_bin = os.environ.get("CHROME_BIN")
+    if chrome_bin:
+        chrome_options.binary_location = chrome_bin
 
     service = Service(ChromeDriverManager().install())
     drv = webdriver.Chrome(service=service, options=chrome_options)
