@@ -32,6 +32,7 @@ Cách chạy:
 """
 
 import pytest
+from conftest import screenshot
 from pages.login_page import LoginPage
 from pages.inventory_page import InventoryPage
 from pages.cart_page import CartPage
@@ -58,6 +59,8 @@ def test_01_login_thanh_cong(driver):
     """
     login_page = LoginPage(driver)
     login_page.open_login_page()
+    screenshot(driver, "01_login_page.png")
+
     login_page.login(VALID_USERNAME, VALID_PASSWORD)
 
     inventory_page = InventoryPage(driver)
@@ -69,6 +72,7 @@ def test_01_login_thanh_cong(driver):
     assert inventory_page.get_page_title() == "Products", (
         "Tiêu đề trang sau khi đăng nhập không đúng."
     )
+    screenshot(driver, "02_login_success.png")
 
 
 # ------------------------------------------------------------------
@@ -99,6 +103,7 @@ def test_02_them_san_pham_vao_gio(driver):
     assert inventory_page.get_cart_count() == "2", (
         f"Số lượng giỏ hàng không đúng, nhận được: {inventory_page.get_cart_count()}"
     )
+    screenshot(driver, "03_added_to_cart.png")
 
     inventory_page.go_to_cart()
     cart_page = CartPage(driver)
@@ -108,6 +113,7 @@ def test_02_them_san_pham_vao_gio(driver):
     assert "Sauce Labs Backpack" in items_in_cart
     assert "Sauce Labs Bike Light" in items_in_cart
     assert len(items_in_cart) == 2, f"Giỏ hàng có sai số sản phẩm: {items_in_cart}"
+    screenshot(driver, "04_cart_page.png")
 
 
 # ------------------------------------------------------------------
@@ -141,6 +147,7 @@ def test_03_dang_xuat(driver):
     assert "inventory.html" not in login_page.current_url(), (
         "Vẫn còn ở trang sản phẩm, đăng xuất thất bại."
     )
+    screenshot(driver, "05_logout_success.png")
 
 
 # ------------------------------------------------------------------
@@ -158,6 +165,7 @@ def test_04_login_voi_tai_khoan_bi_khoa(driver):
     login_page.login(LOCKED_USERNAME, VALID_PASSWORD)
 
     error_text = login_page.get_error_message()
+    screenshot(driver, "06_locked_user_error.png")
     assert "locked out" in error_text.lower(), (
         f"Thông báo lỗi không như mong đợi: {error_text}"
     )

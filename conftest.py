@@ -61,6 +61,19 @@ def driver():
     drv.quit()
 
 
+def screenshot(driver, name):
+    """
+    Lưu ảnh chụp màn hình hiện tại của trình duyệt với tên file cho trước.
+    Dùng để thu thập minh chứng (proof of execution) tại các bước quan
+    trọng của test case (khác với hook bên dưới, chỉ chụp khi test FAIL).
+    """
+    os.makedirs(SCREENSHOT_DIR, exist_ok=True)
+    path = os.path.join(SCREENSHOT_DIR, name)
+    driver.save_screenshot(path)
+    print(f"\n📸 [SCREENSHOT] Đã lưu minh chứng tại: screenshots/{name}")
+    return path
+
+
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     """

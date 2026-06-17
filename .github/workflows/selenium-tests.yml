@@ -62,6 +62,14 @@ jobs:
           path: screenshots/
           if-no-files-found: ignore
 
+      - name: Upload step screenshots (proof of execution for README)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: step-screenshots
+          path: screenshots/
+          if-no-files-found: ignore
+
       - name: Upload test results (JUnit XML)
         if: always()
         uses: actions/upload-artifact@v4
