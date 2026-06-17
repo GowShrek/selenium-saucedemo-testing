@@ -1,0 +1,72 @@
+"""
+conftest.py
+-----------
+File đặc biệt của pytest: mọi fixture và hook khai báo ở đây sẽ tự động
+áp dụng cho TẤT CẢ file test trong cùng thư mục, không cần import.
+
+Gồm 2 phần:
+  1. fixture `driver`  -> khởi tạo/đóng trình duyệt Chrome cho mỗi test
+  2. hook `pytest_runtest_makereport` -> tự động chụp ảnh màn hình
+     mỗi khi một test case FAIL, lưu vào thư mục screenshots/
+"""
+
+import os
+import pytest
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+
+SCREENSHOT_DIR = os.path.join(os.path.dirname(__file__), "screenshots")
+
+
+@pytest.fixture
+def driver():
+    """
+    Khởi tạo Chrome WebDriver trước mỗi test case (setup) và
+    tự động đóng lại sau khi test case kết thúc (teardown).
+    """
+    os.makedirs(SCREENSHOT_DIR, exist_ok=True)
+
+    chrome_options = webdriver.ChromeOptions()
+    # Biến môi trường HEADLESS=1 cho phép chạy ẩn (không hiện cửa sổ),
+    # rất hữu ích khi chạy trên CI/CD (GitHub Actions) vì server không
+    # có màn hình hiển thị.
+    if os.environ.get("HEADLESS", "1") == "1":
+        chrome_options.add_argument("--headless=new")
+    chrome_options.add_argument("--start-maximized")
+    chrome_options.add_argument("--window-size=1920,1080")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+
+    service = Service(ChromeDriverManager().install())
+    drv = webdriver.Chrome(service=service, options=chrome_options)
+    drv.implicitly_wait(3)
+
+    yield drv
+
+    drv.quit()
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """
+    Hook đặc biệt của pytest: tự động chạy sau mỗi bước test.
+    Nếu bước "call" (chạy nội dung test) bị FAIL, ta tự động chụp
+    ảnh màn hình hiện tại của trình duyệt và lưu lại - giúp việc
+    debug dễ dàng hơn nhiều so với chỉ đọc traceback chữ.
+    """
+    outcome = yield
+    report = outcome.get_result()
+
+    if report.when == "call" and report.failed:
+        driver = item.funcargs.get("driver")
+        if driver is not None:
+            os.makedirs(SCREENSHOT_DIR, exist_ok=True)
+            screenshot_path = os.path.join(
+                SCREENSHOT_DIR, f"{item.name}.png"
+            )
+            try:
+                driver.save_screenshot(screenshot_path)
+                print(f"\n📸 Đã lưu ảnh lỗi tại: {screenshot_path}")
+            except Exception as e:
+                print(f"\n⚠️ Không thể chụp ảnh lỗi: {e}")
