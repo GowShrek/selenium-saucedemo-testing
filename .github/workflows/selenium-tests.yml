@@ -27,6 +27,8 @@ jobs:
       - name: Install Google Chrome
         uses: browser-actions/setup-chrome@v1
         id: setup-chrome
+        with:
+          chrome-version: stable
 
       - name: Install Python dependencies
         run: |
@@ -38,7 +40,19 @@ jobs:
           HEADLESS: "1"
           CHROME_BIN: ${{ steps.setup-chrome.outputs.chrome-path }}
         run: |
-          pytest tests/test_saucedemo.py -v -s --junitxml=results.xml
+          set +e
+          pytest tests/test_saucedemo.py -v -s --junitxml=results.xml 2>&1 | tee full_output.log
+          EXIT_CODE=${PIPESTATUS[0]}
+          exit $EXIT_CODE
+        shell: bash
+
+      - name: Show failure diagnosis (only runs if tests failed)
+        if: failure()
+        run: |
+          echo "## ❌ Test run diagnosis" >> "$GITHUB_STEP_SUMMARY"
+          echo '```text' >> "$GITHUB_STEP_SUMMARY"
+          tail -n 150 full_output.log >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload screenshots of failed tests (if any)
         if: failure()
